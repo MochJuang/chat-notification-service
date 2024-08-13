@@ -18,8 +18,8 @@ func (r *jobRepository) CreateJob(job *entity.Job) error {
 	return r.db.Create(job).Error
 }
 
-func (r *jobRepository) GetAllJobs() ([]entity.Job, error) {
-	var jobs []entity.Job
-	err := r.db.Find(&jobs).Error
-	return jobs, err
+func (r *jobRepository) GetJobById(id int) (*entity.Job, error) {
+	var jobs entity.Job
+	err := r.db.Where("id = ?", id).First(&jobs).Error
+	return &jobs, err
 }

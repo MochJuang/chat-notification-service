@@ -5,6 +5,7 @@ import (
 	"notification-service/internal/config"
 	"notification-service/internal/delivery/http/route"
 	"notification-service/internal/repository/postgresql"
+	"notification-service/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -28,6 +29,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not migrate database: %v", err)
 	}
+
+	rmq, err := utils.NewRabbitMQ(cfg.RabbitMQAddress)
+	if err != nil {
+		log.Fatalf("Could not connect to RabbitMQ: %v", err)
+	}
+	rmq.DeclareQueue(utils.QUEUE_NOTIFICATION)
+	rmq.DeclareQueue(utils.QUEUE_BROADCAST)
+
+	cfg.RabbitMQUtils = rmq
 
 	// Initialize Fiber app
 	app := fiber.New()

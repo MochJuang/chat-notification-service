@@ -17,8 +17,8 @@ func SetupRoutes(app *fiber.App, cfg config.Config) {
 	broadcastRepo := postgresql.NewJobRepository(cfg.DB)
 
 	// Services
-	notificationService := service.NewNotificationService(notificationRepo)
-	broadcastService := service.NewJobService(broadcastRepo)
+	notificationService := service.NewNotificationService(notificationRepo, cfg.RabbitMQUtils)
+	broadcastService := service.NewJobService(broadcastRepo, cfg.RabbitMQUtils)
 
 	// Controllers
 	notificationController := httpdelivery.NewNotificationController(notificationService)
@@ -29,5 +29,9 @@ func SetupRoutes(app *fiber.App, cfg config.Config) {
 	app.Post("/notifications", notificationController.SendNotification)
 	app.Get("/notifications/:id", notificationController.GetNotificationById)
 	app.Post("/notifications/broadcasts", broadcastController.SendJob)
-	app.Get("/broadcasts", broadcastController.GetAllJobs)
+	app.Get("/jobs/:id", broadcastController.GetJobById)
+}
+
+func SetupRabbitMQ() {
+
 }

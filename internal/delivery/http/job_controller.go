@@ -1,6 +1,9 @@
 package http
 
 import (
+	"fmt"
+	e "notification-service/internal/exception"
+	"notification-service/internal/model"
 	"notification-service/internal/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,21 +18,29 @@ func NewJobController(jobService service.JobService) *jobController {
 }
 
 func (h *jobController) SendJob(c *fiber.Ctx) error {
-	message := c.FormValue("message")
-
-	err := h.jobService.SendJob(message)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	var req model.RequestSendJob
+	if err := c.BodyParser(&req); err != nil {
+		return e.Validation(err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "job sent"})
+	res, err := h.jobService.SendJob(req)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(res)
 }
 
-func (h *jobController) GetAllJobs(c *fiber.Ctx) error {
-	jobs, err := h.jobService.GetAllJobs()
+func (h *jobController) GetJobById(c *fiber.Ctx) error {
+	jobId, err := c.ParamsInt("id")
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		return e.Validation(fmt.Errorf("invalid id"))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(jobs)
+	jobs, err := h.jobService.GetJobById(jobId)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(jobs)
 }
